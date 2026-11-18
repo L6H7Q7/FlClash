@@ -184,42 +184,58 @@ class SetupAction extends _$SetupAction {
     return running ? _start(request) : _stop(request);
   }
 
-  Future<bool> _start(_RunRequest request) async {
-    if (request.initialize) {
-      var applied = false;
-      try {
-        applied = await applyProfile(
-          force: !request.resume,
-          preloadInvoke: () => _startCoreRunning(request),
-        );
-      } catch (_) {
-        applied = false;
-      }
-      if (!applied && _isCurrent(request)) {
-        await globalState.safeRun(() => setRunning(false));
-      }
-      if (applied) {
-        unawaited(
-          ref.read(proxiesActionProvider.notifier).applyRegionPreference(),
-        );
-      }
-      return applied;
-    }
+  /// Measures the preferred regions and picks their nodes before the listener
+  /// takes traffic, so the run starts on the picked node.
+  Future<void> _pickNodeBeforeListener() {
+    return ref.read(proxiesActionProvider.notifier).applyRegionPreference();
+  }
 
+  void _announceConnected() {
+    ConnectionStart.end();
+    dialogs.showBanner('连接成功', level: BannerLevel.success);
+  }
+
+  Future<bool> _start(_RunRequest request) async {
+    ConnectionStart.begin();
     try {
-      await _startCoreRunning(request);
-    } catch (_) {
-      _rollbackRunning(request);
-      rethrow;
+      if (request.initialize) {
+        var applied = false;
+        try {
+          applied = await applyProfile(
+            force: !request.resume,
+            preloadInvoke: () async {
+              await _pickNodeBeforeListener();
+              await _startCoreRunning(request);
+            },
+          );
+        } catch (_) {
+          applied = false;
+        }
+        if (!applied && _isCurrent(request)) {
+          await globalState.safeRun(() => setRunning(false));
+        }
+        if (applied) {
+          _announceConnected();
+        }
+        return applied;
+      }
+
+      try {
+        await _pickNodeBeforeListener();
+        await _startCoreRunning(request);
+      } catch (_) {
+        _rollbackRunning(request);
+        rethrow;
+      }
+      final applied = await inputsApplied();
+      if (_isCurrent(request) && !applied) {
+        applyProfileDebounce(force: true, silence: true);
+      }
+      _announceConnected();
+      return true;
+    } finally {
+      ConnectionStart.end();
     }
-    final applied = await inputsApplied();
-    if (_isCurrent(request) && !applied) {
-      applyProfileDebounce(force: true, silence: true);
-    }
-    unawaited(
-      ref.read(proxiesActionProvider.notifier).applyRegionPreference(),
-    );
-    return true;
   }
 
   Future<void> _startCoreRunning(_RunRequest request) async {

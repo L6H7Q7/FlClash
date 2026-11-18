@@ -832,24 +832,36 @@ class _StartToggleState extends ConsumerState<_StartToggle>
               child: SizedBox.square(
                 dimension: size,
                 child: Center(
-                  child: widget.suspended
-                      ? GlyphIcon(
-                          AppGlyphs.wifiOff,
+                  child: ValueListenableBuilder<bool>(
+                    valueListenable: ConnectionStart.running,
+                    builder: (_, starting, _) {
+                      if (starting) {
+                        return ActivityIndicator(
                           size: size * 0.34,
                           color: ink,
-                          fill: 1,
-                        )
-                      : TweenAnimationBuilder<double>(
-                          tween: Tween(end: widget.running ? 1 : 0),
-                          duration: _morphDuration,
-                          curve: Curves.easeOutBack,
-                          builder: (_, progress, _) => GlyphIcon(
-                            AppGlyphs.playPause(progress),
-                            size: size * 0.34,
-                            color: ink,
-                            fill: 1,
-                          ),
-                        ),
+                          semanticLabel: '连接中',
+                        );
+                      }
+                      return widget.suspended
+                          ? GlyphIcon(
+                              AppGlyphs.wifiOff,
+                              size: size * 0.34,
+                              color: ink,
+                              fill: 1,
+                            )
+                          : TweenAnimationBuilder<double>(
+                              tween: Tween(end: widget.running ? 1 : 0),
+                              duration: _morphDuration,
+                              curve: Curves.easeOutBack,
+                              builder: (_, progress, _) => GlyphIcon(
+                                AppGlyphs.playPause(progress),
+                                size: size * 0.34,
+                                color: ink,
+                                fill: 1,
+                              ),
+                            );
+                    },
+                  ),
                 ),
               ),
             ),
