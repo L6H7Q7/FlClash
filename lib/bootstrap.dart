@@ -161,6 +161,7 @@ class Bootstrap {
       unawaited(window?.hide());
     }
     await _handleFailedPreference();
+    await RegionPreferenceStore.load();
     await _showCrashRecoveryTip();
     await _container.read(coreActionProvider.notifier).startCore();
     if (!_bootDecision.isDegraded) {

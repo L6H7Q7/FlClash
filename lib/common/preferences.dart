@@ -187,6 +187,41 @@ class Preferences {
     await sharedPreferencesIns?.setString(bootRecordKey, json.encode(record));
   }
 
+  Future<bool> getRegionPreferenceEnabled() async {
+    final sharedPreferencesIns = await _store.value;
+    return sharedPreferencesIns?.getBool(regionPreferenceEnabledKey) ?? true;
+  }
+
+  Future<void> saveRegionPreferenceEnabled(bool enabled) async {
+    final sharedPreferencesIns = await _store.value;
+    await sharedPreferencesIns?.setBool(regionPreferenceEnabledKey, enabled);
+  }
+
+  Future<List<String>> getRegionPreferences() async {
+    final sharedPreferencesIns = await _store.value;
+    final raw = sharedPreferencesIns?.getString(regionPreferencesKey);
+    if (raw == null || raw.isEmpty) {
+      return const [];
+    }
+    try {
+      final decoded = json.decode(raw);
+      if (decoded is! List) {
+        return const [];
+      }
+      return [for (final item in decoded) if (item is String) item];
+    } catch (_) {
+      return const [];
+    }
+  }
+
+  Future<void> saveRegionPreferences(List<String> regions) async {
+    final sharedPreferencesIns = await _store.value;
+    await sharedPreferencesIns?.setString(
+      regionPreferencesKey,
+      json.encode(regions),
+    );
+  }
+
   Future<void> clearPreferences() async {
     final sharedPreferencesIns = await _store.value;
     await sharedPreferencesIns?.clear();

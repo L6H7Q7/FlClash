@@ -221,6 +221,94 @@ class ProxiesAction extends _$ProxiesAction {
     }
   }
 
+  /// Switches every group to the lowest-latency reachable node of the first
+  /// preferred region that has one.
+  ///
+  /// [ensureDelay] measures the preferred regions' nodes first, which the
+  /// startup run needs; a run after a delay test reads its fresh results.
+  /// Does nothing when the preference is off, empty, or already switching.
+  Future<void> applyRegionPreference({bool ensureDelay = true}) async {
+    if (!RegionPreferenceStore.usable) {
+      return;
+    }
+    if (!RegionPreferenceStore.tryStartApplying()) {
+      return;
+    }
+    try {
+      final regions = RegionPreferenceStore.regions.value;
+      final groups = await _waitForGroups();
+      if (groups == null) {
+        return;
+      }
+      for (final group in groups) {
+        final preferred = [
+          for (final proxy in group.all)
+            if (regions.contains(regionOf(proxy.name))) proxy,
+        ];
+        if (preferred.isEmpty) {
+          continue;
+        }
+        if (ensureDelay) {
+          await delayTest(preferred, group.testUrl);
+        }
+        final wanted = _pickPreferredProxy(group, regions);
+        if (wanted == null) {
+          continue;
+        }
+        if (ref.read(selectedProxyNameProvider(group.name)) == wanted) {
+          continue;
+        }
+        await changeProxy(groupName: group.name, proxyName: wanted);
+      }
+    } finally {
+      RegionPreferenceStore.finishApplying();
+    }
+  }
+
+  /// The lowest-latency reachable node of the first preferred region that has
+  /// one, in preference order.
+  String? _pickPreferredProxy(Group group, List<String> regions) {
+    final testUrl = ref.read(realTestUrlProvider(group.testUrl));
+    final delayMap = ref.read(delayDataSourceProvider)[testUrl] ?? const {};
+    for (final region in regions) {
+      final candidates = <Proxy>[];
+      for (final proxy in group.all) {
+        if (regionOf(proxy.name) != region) {
+          continue;
+        }
+        final value = delayMap[proxy.name];
+        if (value != null && value >= 0) {
+          candidates.add(proxy);
+        }
+      }
+      if (candidates.isEmpty) {
+        continue;
+      }
+      candidates.sort((a, b) {
+        final aDelay = delayMap[a.name] ?? 0;
+        final bDelay = delayMap[b.name] ?? 0;
+        return aDelay.compareTo(bDelay);
+      });
+      return candidates.first.name;
+    }
+    return null;
+  }
+
+  /// Waits for the Core to connect and its groups to load, for startup runs.
+  Future<List<Group>?> _waitForGroups() async {
+    const attempt = Duration(milliseconds: 500);
+    for (var index = 0; index < 60; index++) {
+      if (ref.read(coreStatusProvider) == CoreStatus.connected) {
+        final groups = ref.read(groupsProvider);
+        if (groups.isNotEmpty) {
+          return groups;
+        }
+      }
+      await Future<void>.delayed(attempt);
+    }
+    return null;
+  }
+
   Future<void> updateProvider(
     ExternalProvider provider, {
     bool showLoading = false,
@@ -422,6 +510,7 @@ class ProxiesAction extends _$ProxiesAction {
           (key) => !job.startedOnDispatch.contains(key),
         ),
       );
+      unawaited(applyRegionPreference(ensureDelay: false));
     }
   }
 

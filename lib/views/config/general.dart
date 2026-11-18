@@ -337,6 +337,7 @@ class GeneralView extends ConsumerWidget {
         select: (state) => state.onlyStatisticsProxy,
         update: (state, value) => state.copyWith(onlyStatisticsProxy: value),
       ),
+      const _RegionPreferenceToggle(),
     ];
   }
 
@@ -430,6 +431,24 @@ class GeneralView extends ConsumerWidget {
             footer: appLocalizations.logcatDesc,
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// The global switch of the region preference feature.
+class _RegionPreferenceToggle extends StatelessWidget {
+  const _RegionPreferenceToggle();
+
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder<bool>(
+      valueListenable: RegionPreferenceStore.enabled,
+      builder: (context, enabled, _) => ListItem.toggle(
+        title: const Text('地区偏好'),
+        subtitle: const Text('启动后按地区优先级自动选节点'),
+        value: enabled,
+        onChanged: (value) => RegionPreferenceStore.setEnabled(value),
       ),
     );
   }

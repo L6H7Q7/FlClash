@@ -41,6 +41,8 @@ export 'print.dart';
 export 'protocol.dart';
 export 'provider_reader.dart';
 export 'proxy.dart';
+export 'region.dart';
+export 'region_preference_store.dart';
 export 'request.dart';
 export 'search.dart';
 export 'snowflake.dart';

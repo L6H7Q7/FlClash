@@ -198,6 +198,11 @@ class SetupAction extends _$SetupAction {
       if (!applied && _isCurrent(request)) {
         await globalState.safeRun(() => setRunning(false));
       }
+      if (applied) {
+        unawaited(
+          ref.read(proxiesActionProvider.notifier).applyRegionPreference(),
+        );
+      }
       return applied;
     }
 
@@ -211,6 +216,9 @@ class SetupAction extends _$SetupAction {
     if (_isCurrent(request) && !applied) {
       applyProfileDebounce(force: true, silence: true);
     }
+    unawaited(
+      ref.read(proxiesActionProvider.notifier).applyRegionPreference(),
+    );
     return true;
   }
 
