@@ -375,7 +375,7 @@ mixin RoutedProbe<K, V>
       return;
     }
     final attempt = _retryCount[target] ?? 0;
-    if (attempt >= 3) {
+    if (attempt >= 8) {
       return;
     }
     _retryCount[target] = attempt + 1;
