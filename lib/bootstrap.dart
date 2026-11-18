@@ -180,12 +180,17 @@ class Bootstrap {
   /// Refreshes the current subscription and preselects preferred nodes before
   /// a start, so clicking start only has to connect.
   Future<void> _prepareForStart() async {
-    if (SubscriptionAutoUpdateStore.usable) {
-      await _refreshCurrentProfile();
+    AppPreparation.begin();
+    try {
+      if (SubscriptionAutoUpdateStore.usable) {
+        await _refreshCurrentProfile();
+      }
+      await _container
+          .read(proxiesActionProvider.notifier)
+          .applyRegionPreference();
+    } finally {
+      AppPreparation.complete();
     }
-    await _container
-        .read(proxiesActionProvider.notifier)
-        .applyRegionPreference();
   }
 
   Future<void> _refreshCurrentProfile() async {

@@ -186,10 +186,46 @@ class SetupAction extends _$SetupAction {
 
   /// Measures the preferred regions and picks their nodes before the listener
   /// takes traffic, so the run starts on the picked node.
-  Future<void> _pickNodeBeforeListener() {
-    return ref
+  Future<void> _pickNodeBeforeListener() async {
+    await AppPreparation.wait();
+    await ref
         .read(proxiesActionProvider.notifier)
         .applyRegionPreference(ensureDelay: false);
+  }
+
+  /// Sends a real request through the picked node before the listener takes
+  /// traffic, so a slow first connection does not leave the run unusable.
+  Future<void> _warmUpSelectedNode() async {
+    final groups = ref.read(groupsProvider);
+    if (groups.isEmpty) {
+      return;
+    }
+    final group = groups.first;
+    final proxyName = ref.read(selectedProxyNameProvider(group.name)) ?? '';
+    if (proxyName.isEmpty) {
+      return;
+    }
+    Proxy? proxy;
+    for (final item in group.all) {
+      if (item.name == proxyName) {
+        proxy = item;
+        break;
+      }
+    }
+    if (proxy == null) {
+      return;
+    }
+    final notifier = ref.read(proxiesActionProvider.notifier);
+    for (var attempt = 0; attempt < 3; attempt++) {
+      await notifier.proxyDelayTest(proxy, group.testUrl);
+      final delay = ref.read(
+        delayProvider(proxyName: proxyName, testUrl: group.testUrl),
+      );
+      if (delay != null && delay >= 0) {
+        return;
+      }
+      await Future<void>.delayed(const Duration(seconds: 1));
+    }
   }
 
   Future<bool> _start(_RunRequest request) async {
@@ -202,6 +238,7 @@ class SetupAction extends _$SetupAction {
             force: !request.resume,
             preloadInvoke: () async {
               await _pickNodeBeforeListener();
+              await _warmUpSelectedNode();
               await _startCoreRunning(request);
             },
           );
@@ -216,6 +253,7 @@ class SetupAction extends _$SetupAction {
 
       try {
         await _pickNodeBeforeListener();
+        await _warmUpSelectedNode();
         await _startCoreRunning(request);
       } catch (_) {
         _rollbackRunning(request);

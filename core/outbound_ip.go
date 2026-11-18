@@ -12,8 +12,8 @@ import (
 
 const (
 	// Racing every source at once would take every probe slot.
-	outboundIpConcurrency = 3
-	outboundIpStagger     = 800 * time.Millisecond
+	outboundIpConcurrency = 5
+	outboundIpStagger     = 400 * time.Millisecond
 
 	outboundIpMaxBody = 4096
 
