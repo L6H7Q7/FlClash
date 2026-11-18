@@ -115,7 +115,7 @@ class ApplicationState extends ConsumerState<Application> {
   }
 
   void _autoUpdateProfilesTask() {
-    _autoUpdateProfilesTaskTimer = Timer(const Duration(minutes: 20), () async {
+    _autoUpdateProfilesTaskTimer = Timer(const Duration(hours: 6), () async {
       await ref.read(profilesActionProvider.notifier).autoUpdateProfiles();
       await ref.read(resourcesActionProvider.notifier).autoUpdate();
       await ref.read(mitmModulesActionProvider.notifier).autoUpdate();

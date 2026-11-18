@@ -775,7 +775,7 @@ void main() {
         secret: 'secret',
         unifiedDelay: false,
         geoAutoUpdate: true,
-        geoUpdateInterval: 6,
+        geoUpdateInterval: 12,
         geoXUrl: {...defaultGeoXUrl, GeoResource.MMDB: 'https://mmdb.test'},
         testUrl: 'https://probe.test/204',
       );

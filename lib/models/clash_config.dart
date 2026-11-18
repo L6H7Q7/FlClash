@@ -2185,7 +2185,7 @@ abstract class PatchClashConfig with _$PatchClashConfig {
     @Default('') String secret,
     @Default({}) Map<String, String> hosts,
     @Default(false) @JsonKey(name: 'geo-auto-update') bool geoAutoUpdate,
-    @Default(24) @JsonKey(name: 'geo-update-interval') int geoUpdateInterval,
+    @Default(6) @JsonKey(name: 'geo-update-interval') int geoUpdateInterval,
     @Default(defaultTestUrl) @JsonKey(name: 'test-url') String testUrl,
     @Default({})
     @JsonKey(

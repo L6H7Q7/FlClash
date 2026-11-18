@@ -56,9 +56,9 @@ double systemTextScaleOf(BuildContext context) {
 /// How long, in milliseconds, the Core may spend on one manual delay test. It
 /// spends this twice in the worst case - once queueing for a slot, once on the
 /// probe itself - so the guard below has to outlast twice the longest option.
-const delayTestTimeoutOptions = [500, 1000, 2000, 5000, 8000];
+const delayTestTimeoutOptions = [500, 1000, 2000, 5000, 6000, 8000];
 
-const defaultDelayTestTimeout = 8000;
+const defaultDelayTestTimeout = 6000;
 
 const delayTestGuardDuration = Duration(seconds: 30);
 
@@ -102,7 +102,7 @@ const maxConcurrentImports = 4;
 const maxConcurrentIconLoads = 8;
 
 const renderThrottleDuration = Duration(milliseconds: 300);
-const defaultUpdateDuration = Duration(days: 1);
+const defaultUpdateDuration = Duration(hours: 6);
 const MMDB = 'GEOIP.metadb';
 const ASN = 'ASN.mmdb';
 const GEOIP = 'GEOIP.dat';
@@ -132,7 +132,7 @@ const defaultSystemDnsFallback = '223.5.5.5';
 const repository = 'chen08209/FlClash';
 const maxMobileWidth = 600;
 const maxLaptopWidth = 840;
-const defaultTestUrl = 'https://www.gstatic.com/generate_204';
+const defaultTestUrl = 'https://www.youtube.com/generate_204';
 
 const shareLinkSchemes = {
   'hysteria',
