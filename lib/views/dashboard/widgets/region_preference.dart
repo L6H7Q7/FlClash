@@ -53,7 +53,7 @@ class RegionPreferenceCard extends ConsumerWidget {
                     overflow: TextOverflow.ellipsis,
                     style: DashboardText.rowTitle(context),
                   ),
-                  _CurrentNode(),
+                  const _CurrentNode(),
                 ],
               ),
             );
@@ -95,7 +95,7 @@ class _CurrentNode extends ConsumerWidget {
         if (delay == null)
           Text('—', style: DashboardText.label(context))
         else if (delay < 0)
-          DashboardChip(label: '超时', tone: DashboardChipTone.warn)
+          const DashboardChip(label: '超时', tone: DashboardChipTone.warn)
         else
           Text(
             '${delay}ms',
@@ -172,7 +172,7 @@ class _RegionPreferenceSheetState extends State<_RegionPreferenceSheet> {
     final appLocalizations = context.appLocalizations;
     return Scaffold(
       title: '地区偏好',
-      actions: [
+      iconActions: [
         IconButtonData(
           glyph: AppGlyphs.check,
           tooltip: appLocalizations.save,
