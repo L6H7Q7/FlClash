@@ -48,6 +48,16 @@ class RegionPreferenceStore {
     await preferences.saveRegionPreferences(normalized);
   }
 
+  /// The node the feature last picked, shown beside the run status.
+  static final ValueNotifier<String?> lastNode = ValueNotifier<String?>(null);
+
+  static final ValueNotifier<int?> lastDelay = ValueNotifier<int?>(null);
+
+  static void setLastPick(String? node, int? delay) {
+    lastNode.value = node;
+    lastDelay.value = delay;
+  }
+
   /// Guards against re-entry while a run is switching proxies.
   static bool tryStartApplying() {
     if (_applying) {

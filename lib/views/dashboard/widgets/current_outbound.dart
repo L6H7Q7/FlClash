@@ -167,10 +167,34 @@ class _CurrentOutboundCardState extends ConsumerState<CurrentOutboundCard>
                         glyph: AppGlyphs.status,
                         title: appLocalizations.status,
                         leading: [
-                          DashboardChip(
-                            label: chipLabel,
-                            tone: chipTone,
-                            dot: isStart,
+                          ValueListenableBuilder<bool>(
+                            valueListenable: ConnectionStart.running,
+                            builder: (_, starting, _) => DashboardChip(
+                              label: starting ? '连接中' : chipLabel,
+                              tone: starting
+                                  ? DashboardChipTone.warn
+                                  : chipTone,
+                              dot: isStart && !starting,
+                            ),
+                          ),
+                          ValueListenableBuilder<String?>(
+                            valueListenable: RegionPreferenceStore.lastNode,
+                            builder: (_, node, _) {
+                              if (node == null) {
+                                return const SizedBox.shrink();
+                              }
+                              final delay =
+                                  RegionPreferenceStore.lastDelay.value;
+                              return ConstrainedBox(
+                                constraints: const BoxConstraints(maxWidth: 140),
+                                child: Text(
+                                  delay != null ? '$node ${delay}ms' : node,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: DashboardText.label(context),
+                                ),
+                              );
+                            },
                           ),
                         ],
                       ),

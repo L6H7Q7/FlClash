@@ -190,11 +190,6 @@ class SetupAction extends _$SetupAction {
     return ref.read(proxiesActionProvider.notifier).applyRegionPreference();
   }
 
-  void _announceConnected() {
-    ConnectionStart.end();
-    dialogs.showBanner('连接成功', level: BannerLevel.success);
-  }
-
   Future<bool> _start(_RunRequest request) async {
     ConnectionStart.begin();
     try {
@@ -214,9 +209,6 @@ class SetupAction extends _$SetupAction {
         if (!applied && _isCurrent(request)) {
           await globalState.safeRun(() => setRunning(false));
         }
-        if (applied) {
-          _announceConnected();
-        }
         return applied;
       }
 
@@ -231,7 +223,6 @@ class SetupAction extends _$SetupAction {
       if (_isCurrent(request) && !applied) {
         applyProfileDebounce(force: true, silence: true);
       }
-      _announceConnected();
       return true;
     } finally {
       ConnectionStart.end();

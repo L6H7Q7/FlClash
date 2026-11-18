@@ -235,6 +235,7 @@ class ProxiesAction extends _$ProxiesAction {
       return;
     }
     try {
+      RegionPreferenceStore.setLastPick(null, null);
       final regions = RegionPreferenceStore.regions.value;
       final groups = await _waitForGroups();
       if (groups == null) {
@@ -267,13 +268,7 @@ class ProxiesAction extends _$ProxiesAction {
           pickedDelay = ref.read(delayDataSourceProvider)[testUrl]?[wanted];
         }
       }
-      if (pickedNode != null) {
-        final delay = pickedDelay;
-        dialogs.showBanner(
-          '地区偏好：已选 $pickedNode${delay != null ? '（${delay}ms）' : ''}',
-          level: BannerLevel.success,
-        );
-      }
+      RegionPreferenceStore.setLastPick(pickedNode, pickedDelay);
     } finally {
       RegionPreferenceStore.finishApplying();
     }
