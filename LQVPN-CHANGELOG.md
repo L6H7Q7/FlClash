@@ -54,3 +54,9 @@
 - Gradle 下载源改为华为云镜像；关闭 Kotlin 增量编译（缓存损坏问题）
 - 修复 flutter_distributor 打包 Android 的类型转换 bug（`Platform.isWindows` → `platform == 'windows'`）
 - 补 Zig/libclang 依赖：为 NDK 补充 libclang.dll 与 clang builtin include，并修改 rquickjs-sys 构建脚本传入头文件路径
+
+### 六、检测与启动优化（2026-11-18）
+
+- 出口 IP 检测：超时 6 秒 → 3 秒；Go 侧并发 3 → 5、错开 800ms → 400ms（检测更快出结果）
+- 打开应用准备期间点启动：启动会等待刷新与预选完成（最多 20 秒）再接管，避免与配置重载冲突
+- 启动前预热：对选中节点先做一次真实测速，确认链路可用后再接管流量
