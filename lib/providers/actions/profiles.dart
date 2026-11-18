@@ -53,6 +53,14 @@ class ProfilesAction extends _$ProfilesAction {
       }
       try {
         await updateProfile(profile);
+        if (profile.id == ref.read(currentProfileIdProvider)) {
+          unawaited(
+            AppNotification.show(
+              title: '订阅已刷新',
+              body: profile.label,
+            ),
+          );
+        }
       } catch (e) {
         commonPrint.log(compactError(e), logLevel: LogLevel.warning);
       }
