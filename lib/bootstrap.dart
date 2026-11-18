@@ -163,19 +163,44 @@ class Bootstrap {
     }
     await _handleFailedPreference();
     await RegionPreferenceStore.load();
+    await SubscriptionAutoUpdateStore.load();
     await _showCrashRecoveryTip();
     await _container.read(coreActionProvider.notifier).startCore();
     if (!_bootDecision.isDegraded) {
       await _container.read(setupActionProvider.notifier).initStatus();
     }
     _container.read(initProvider.notifier).value = true;
-    unawaited(
-      _container.read(proxiesActionProvider.notifier).applyRegionPreference(),
-    );
+    unawaited(_prepareForStart());
     unawaited(_container.read(resourcesActionProvider.notifier).autoUpdate());
     unawaited(_container.read(mitmModulesActionProvider.notifier).autoUpdate());
     await bootGuard.markRunning();
     unawaited(_container.read(locationPermissionsProvider.notifier).refresh());
+  }
+
+  /// Refreshes the current subscription and preselects preferred nodes before
+  /// a start, so clicking start only has to connect.
+  Future<void> _prepareForStart() async {
+    if (SubscriptionAutoUpdateStore.usable) {
+      await _refreshCurrentProfile();
+    }
+    await _container
+        .read(proxiesActionProvider.notifier)
+        .applyRegionPreference();
+  }
+
+  Future<void> _refreshCurrentProfile() async {
+    final profile = _container.read(currentProfileProvider);
+    if (profile == null || profile.type != ProfileType.url) {
+      return;
+    }
+    try {
+      await _container
+          .read(profilesActionProvider.notifier)
+          .updateProfile(profile);
+      unawaited(AppNotification.show(title: '订阅已刷新', body: profile.label));
+    } catch (_) {
+      // A failed refresh must not stop the app.
+    }
   }
 
   Future<void> _showCrashRecoveryTip() async {

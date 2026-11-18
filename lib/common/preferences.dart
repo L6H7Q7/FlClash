@@ -222,6 +222,16 @@ class Preferences {
     );
   }
 
+  Future<bool> getSubscriptionAutoUpdate() async {
+    final sharedPreferencesIns = await _store.value;
+    return sharedPreferencesIns?.getBool(subscriptionAutoUpdateKey) ?? true;
+  }
+
+  Future<void> saveSubscriptionAutoUpdate(bool enabled) async {
+    final sharedPreferencesIns = await _store.value;
+    await sharedPreferencesIns?.setBool(subscriptionAutoUpdateKey, enabled);
+  }
+
   Future<void> clearPreferences() async {
     final sharedPreferencesIns = await _store.value;
     await sharedPreferencesIns?.clear();

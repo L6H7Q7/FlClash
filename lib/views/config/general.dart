@@ -338,6 +338,7 @@ class GeneralView extends ConsumerWidget {
         update: (state, value) => state.copyWith(onlyStatisticsProxy: value),
       ),
       const _RegionPreferenceToggle(),
+      const _SubscriptionAutoUpdateToggle(),
     ];
   }
 
@@ -449,6 +450,24 @@ class _RegionPreferenceToggle extends StatelessWidget {
         subtitle: const Text('启动后按地区优先级自动选节点'),
         value: enabled,
         onChanged: (value) => RegionPreferenceStore.setEnabled(value),
+      ),
+    );
+  }
+}
+
+/// Refreshes the current subscription when the app opens.
+class _SubscriptionAutoUpdateToggle extends StatelessWidget {
+  const _SubscriptionAutoUpdateToggle();
+
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder<bool>(
+      valueListenable: SubscriptionAutoUpdateStore.enabled,
+      builder: (context, enabled, _) => ListItem.toggle(
+        title: const Text('自动更新订阅'),
+        subtitle: const Text('打开应用时刷新当前订阅并重新预选节点'),
+        value: enabled,
+        onChanged: (value) => SubscriptionAutoUpdateStore.setEnabled(value),
       ),
     );
   }

@@ -192,27 +192,6 @@ class SetupAction extends _$SetupAction {
         .applyRegionPreference(ensureDelay: false);
   }
 
-  /// Refreshes the current subscription after a start, so the next run works
-  /// from the latest nodes.
-  void _refreshCurrentProfile() {
-    final profile = ref.read(currentProfileProvider);
-    if (profile == null || profile.type != ProfileType.url) {
-      return;
-    }
-    unawaited(_runCurrentProfileRefresh(profile));
-  }
-
-  Future<void> _runCurrentProfileRefresh(Profile profile) async {
-    try {
-      await ref.read(profilesActionProvider.notifier).updateProfile(profile);
-      unawaited(
-        AppNotification.show(title: '订阅已刷新', body: profile.label),
-      );
-    } catch (_) {
-      // A failed refresh must not affect the run.
-    }
-  }
-
   Future<bool> _start(_RunRequest request) async {
     ConnectionStart.begin();
     try {
@@ -232,9 +211,6 @@ class SetupAction extends _$SetupAction {
         if (!applied && _isCurrent(request)) {
           await globalState.safeRun(() => setRunning(false));
         }
-        if (applied) {
-          _refreshCurrentProfile();
-        }
         return applied;
       }
 
@@ -249,7 +225,6 @@ class SetupAction extends _$SetupAction {
       if (_isCurrent(request) && !applied) {
         applyProfileDebounce(force: true, silence: true);
       }
-      _refreshCurrentProfile();
       return true;
     } finally {
       ConnectionStart.end();

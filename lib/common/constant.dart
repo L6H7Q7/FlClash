@@ -132,6 +132,7 @@ const defaultSystemDnsFallback = '223.5.5.5';
 const repository = 'chen08209/FlClash';
 const regionPreferenceEnabledKey = 'regionPreferenceEnabled';
 const regionPreferencesKey = 'regionPreferences';
+const subscriptionAutoUpdateKey = 'subscriptionAutoUpdateOnLaunch';
 const maxMobileWidth = 600;
 const maxLaptopWidth = 840;
 const defaultTestUrl = 'https://www.youtube.com/generate_204';
