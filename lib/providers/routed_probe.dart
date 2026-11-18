@@ -233,7 +233,7 @@ mixin RoutedProbe<K, V>
 
   void _launch() {
     _scheduled = false;
-    if (!ref.mounted || !_route.live || !ref.read(appVisibleProvider)) {
+    if (!ref.mounted || !_route.live) {
       return;
     }
     final route = _route;
@@ -368,7 +368,7 @@ mixin RoutedProbe<K, V>
       _retryCount.remove(target);
       return;
     }
-    if (phase != ProbePhase.failed || !_watchers.containsKey(target)) {
+    if (phase != ProbePhase.failed) {
       return;
     }
     if (_retries[target]?.isActive ?? false) {
