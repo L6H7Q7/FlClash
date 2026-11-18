@@ -152,6 +152,7 @@ class Bootstrap {
       _container.read(profilesActionProvider.notifier).autoUpdateProfiles(),
     );
     unawaited(clearUpdateDownloads());
+    unawaited(AppNotification.init());
     unawaited(
       autoLaunch?.updateStatus(_container.read(appSettingProvider).autoLaunch),
     );

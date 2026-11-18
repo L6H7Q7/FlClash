@@ -1,10 +1,12 @@
 import 'dart:async';
 
 import 'package:fl_clash/common/common.dart';
+import 'package:fl_clash/common/service_probe.dart';
 import 'package:fl_clash/common/system_dns.dart';
 import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/models/models.dart';
 import 'package:fl_clash/providers/mitm.dart';
+import 'package:fl_clash/providers/outbound_ip.dart';
 import 'package:fl_clash/providers/providers.dart';
 import 'package:fl_clash/state.dart';
 import 'package:fl_clash/ui/ui.dart';
@@ -24,6 +26,8 @@ class AppStateManager extends ConsumerStatefulWidget {
 
 class _AppStateManagerState extends ConsumerState<AppStateManager>
     with WidgetsBindingObserver {
+  var _connectionNotified = false;
+
   @override
   void initState() {
     super.initState();
@@ -68,6 +72,40 @@ class _AppStateManagerState extends ConsumerState<AppStateManager>
         unawaited(systemDns.sync(next));
       }, fireImmediately: true);
     }
+    ref.listenManual(isStartProvider, (prev, next) {
+      if (next) {
+        _connectionNotified = false;
+      }
+    });
+    ref.listenManual(
+      outboundIpProbeProvider.select(
+        (state) => state.entryOf(routedOutbound).value,
+      ),
+      (prev, next) {
+        if (next == null || _connectionNotified) {
+          return;
+        }
+        if (!ref.read(isStartProvider)) {
+          return;
+        }
+        _connectionNotified = true;
+        unawaited(
+          AppNotification.show(
+            title: '连接成功',
+            body: _currentNodeName(),
+          ),
+        );
+      },
+      fireImmediately: true,
+    );
+  }
+
+  String _currentNodeName() {
+    final groups = ref.read(groupsProvider);
+    if (groups.isEmpty) {
+      return '';
+    }
+    return ref.read(selectedProxyNameProvider(groups.first.name)) ?? '';
   }
 
   @override
