@@ -168,6 +168,9 @@ class Bootstrap {
       await _container.read(setupActionProvider.notifier).initStatus();
     }
     _container.read(initProvider.notifier).value = true;
+    unawaited(
+      _container.read(proxiesActionProvider.notifier).applyRegionPreference(),
+    );
     unawaited(_container.read(resourcesActionProvider.notifier).autoUpdate());
     unawaited(_container.read(mitmModulesActionProvider.notifier).autoUpdate());
     await bootGuard.markRunning();

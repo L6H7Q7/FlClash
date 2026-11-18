@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:fl_clash/common/common.dart';
 import 'package:flutter/foundation.dart';
 
@@ -16,6 +18,7 @@ class RegionPreferenceStore {
 
   static bool _loaded = false;
   static bool _applying = false;
+  static Completer<void>? _applyingCompleter;
 
   static bool get isApplying => _applying;
 
@@ -64,10 +67,23 @@ class RegionPreferenceStore {
       return false;
     }
     _applying = true;
+    _applyingCompleter = Completer<void>();
     return true;
   }
 
   static void finishApplying() {
     _applying = false;
+    final completer = _applyingCompleter;
+    _applyingCompleter = null;
+    if (completer != null && !completer.isCompleted) {
+      completer.complete();
+    }
+  }
+
+  /// Waits for the run that holds the lock, so a start reuses its pick instead
+  /// of switching again after the listener has taken traffic.
+  static Future<void> waitApplying() {
+    final completer = _applyingCompleter;
+    return completer == null ? Future.value() : completer.future;
   }
 }

@@ -232,6 +232,7 @@ class ProxiesAction extends _$ProxiesAction {
       return;
     }
     if (!RegionPreferenceStore.tryStartApplying()) {
+      await RegionPreferenceStore.waitApplying();
       return;
     }
     try {
@@ -251,7 +252,7 @@ class ProxiesAction extends _$ProxiesAction {
         if (preferred.isEmpty) {
           continue;
         }
-        if (ensureDelay) {
+        if (ensureDelay || !_hasDelayData(group, regions)) {
           await delayTest(preferred, group.testUrl);
         }
         final wanted = _pickPreferredProxy(group, regions);
@@ -274,10 +275,24 @@ class ProxiesAction extends _$ProxiesAction {
     }
   }
 
+  /// Whether the group already has measured delays for any preferred node.
+  bool _hasDelayData(Group group, List<String> regions) {
+    final testUrl = ref.read(realTestUrlProvider(group.testUrl));
+    final delayMap = ref.read(delayDataSourceProvider)[testUrl] ?? const {};
+    for (final proxy in group.all) {
+      if (!regions.contains(regionOf(proxy.name))) {
+        continue;
+      }
+      if (delayMap[proxy.name] != null) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   /// The lowest-latency reachable node of the first preferred region that has
   /// one, in preference order.
-  String? _pickPreferredProxy(Group group, List<String> regions) {
-    final testUrl = ref.read(realTestUrlProvider(group.testUrl));
+  String? _pickPreferredProxy(Group group, List<String> regions) {    final testUrl = ref.read(realTestUrlProvider(group.testUrl));
     final delayMap = ref.read(delayDataSourceProvider)[testUrl] ?? const {};
     for (final region in regions) {
       final candidates = <Proxy>[];

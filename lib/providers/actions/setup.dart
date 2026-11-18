@@ -187,7 +187,9 @@ class SetupAction extends _$SetupAction {
   /// Measures the preferred regions and picks their nodes before the listener
   /// takes traffic, so the run starts on the picked node.
   Future<void> _pickNodeBeforeListener() {
-    return ref.read(proxiesActionProvider.notifier).applyRegionPreference();
+    return ref
+        .read(proxiesActionProvider.notifier)
+        .applyRegionPreference(ensureDelay: false);
   }
 
   Future<bool> _start(_RunRequest request) async {
