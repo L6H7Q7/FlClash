@@ -240,6 +240,8 @@ class ProxiesAction extends _$ProxiesAction {
       if (groups == null) {
         return;
       }
+      String? pickedNode;
+      int? pickedDelay;
       for (final group in groups) {
         final preferred = [
           for (final proxy in group.all)
@@ -259,6 +261,18 @@ class ProxiesAction extends _$ProxiesAction {
           continue;
         }
         await changeProxy(groupName: group.name, proxyName: wanted);
+        if (pickedNode == null) {
+          pickedNode = wanted;
+          final testUrl = ref.read(realTestUrlProvider(group.testUrl));
+          pickedDelay = ref.read(delayDataSourceProvider)[testUrl]?[wanted];
+        }
+      }
+      if (pickedNode != null) {
+        final delay = pickedDelay;
+        dialogs.showBanner(
+          '地区偏好：已选 $pickedNode${delay != null ? '（${delay}ms）' : ''}',
+          level: BannerLevel.success,
+        );
       }
     } finally {
       RegionPreferenceStore.finishApplying();
