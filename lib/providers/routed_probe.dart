@@ -88,6 +88,8 @@ mixin RoutedProbe<K, V>
   final Set<K> _unverified = {};
   final Map<K, ProbeEntry<V>> _landed = {};
   final Map<K, Timer> _cooling = {};
+  final Map<K, Timer> _retries = {};
+  final Map<K, int> _retryCount = {};
   bool _scheduled = false;
   bool _verifying = false;
   bool _reverify = false;
@@ -126,6 +128,10 @@ mixin RoutedProbe<K, V>
         timer.cancel();
       }
       _cooling.clear();
+      for (final timer in _retries.values) {
+        timer.cancel();
+      }
+      _retries.clear();
     });
     _route = ref.read(routeTrackerProvider);
     ref.listen(routeTrackerProvider, _onRoute);
@@ -342,6 +348,7 @@ mixin RoutedProbe<K, V>
       );
     }
     state = RoutedProbeState(entries);
+    _maybeRetry(target, entries[target]?.phase);
     if (current.isBehind(stamp)) {
       ref.read(routeTrackerProvider.notifier).resync();
     }
@@ -351,6 +358,34 @@ mixin RoutedProbe<K, V>
     if (_landed.isNotEmpty) {
       unawaited(_verify());
     }
+  }
+
+  /// A failed check retries itself a few times, so the state card recovers
+  /// without the user tapping the icon.
+  void _maybeRetry(K target, ProbePhase? phase) {
+    if (phase == ProbePhase.fresh) {
+      _retries.remove(target)?.cancel();
+      _retryCount.remove(target);
+      return;
+    }
+    if (phase != ProbePhase.failed || !_watchers.containsKey(target)) {
+      return;
+    }
+    if (_retries[target]?.isActive ?? false) {
+      return;
+    }
+    final attempt = _retryCount[target] ?? 0;
+    if (attempt >= 3) {
+      return;
+    }
+    _retryCount[target] = attempt + 1;
+    _retries[target] = Timer(const Duration(milliseconds: 1500), () {
+      _retries.remove(target);
+      _cooling.remove(target)?.cancel();
+      if (ref.mounted && _watchers.containsKey(target)) {
+        _mark(target);
+      }
+    });
   }
 
   ProbeEntry<V> _settledEntry(V? value, RouteStamp stamp) {
