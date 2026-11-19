@@ -167,11 +167,12 @@ class Bootstrap {
     await DetectionRetryStore.load();
     await _showCrashRecoveryTip();
     await _container.read(coreActionProvider.notifier).startCore();
+    final preparation = _prepareForStart();
     if (!_bootDecision.isDegraded) {
       await _container.read(setupActionProvider.notifier).initStatus();
     }
     _container.read(initProvider.notifier).value = true;
-    unawaited(_prepareForStart());
+    unawaited(preparation);
     unawaited(_container.read(resourcesActionProvider.notifier).autoUpdate());
     unawaited(_container.read(mitmModulesActionProvider.notifier).autoUpdate());
     await bootGuard.markRunning();

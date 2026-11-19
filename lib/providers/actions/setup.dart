@@ -150,8 +150,10 @@ class SetupAction extends _$SetupAction {
     _startTime = await serviceStartTime();
     if (_isRunning) {
       globalState.lastConfigMd5 = await preferences.getAppliedConfigMd5();
+      await AppPreparation.wait();
       await _run(true, initialize: true, resume: true);
     } else if (ref.read(appSettingProvider).autoRun) {
+      await AppPreparation.wait();
       await setRunning(true, initialize: true);
     } else {
       await globalState.safeRun(() => applyProfile(force: true));
