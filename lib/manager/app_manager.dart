@@ -8,6 +8,7 @@ import 'package:fl_clash/models/models.dart';
 import 'package:fl_clash/providers/mitm.dart';
 import 'package:fl_clash/providers/outbound_ip.dart';
 import 'package:fl_clash/providers/providers.dart';
+import 'package:fl_clash/providers/routed_probe.dart';
 import 'package:fl_clash/state.dart';
 import 'package:fl_clash/ui/ui.dart';
 import 'package:fl_clash/widgets/icon.dart';
@@ -27,6 +28,9 @@ class AppStateManager extends ConsumerStatefulWidget {
 class _AppStateManagerState extends ConsumerState<AppStateManager>
     with WidgetsBindingObserver {
   var _connectionNotified = false;
+  var _stabilizing = false;
+  Timer? _stableCheck10;
+  Timer? _stableCheck20;
 
   @override
   void initState() {
@@ -73,31 +77,98 @@ class _AppStateManagerState extends ConsumerState<AppStateManager>
       }, fireImmediately: true);
     }
     ref.listenManual(isStartProvider, (prev, next) {
+      _cancelStability();
       if (next) {
         _connectionNotified = false;
       }
     });
     ref.listenManual(
       outboundIpProbeProvider.select(
-        (state) => state.entryOf(routedOutbound).value,
+        (state) => state.entryOf(routedOutbound),
       ),
       (prev, next) {
-        if (next == null || _connectionNotified) {
-          return;
-        }
         if (!ref.read(isStartProvider)) {
           return;
         }
-        _connectionNotified = true;
-        unawaited(
-          AppNotification.show(
-            title: '连接成功',
-            body: _currentNodeName(),
-          ),
-        );
+        if (next.value == null || next.phase != ProbePhase.fresh) {
+          return;
+        }
+        if (next.stamp?.proxied != true) {
+          return;
+        }
+        _onCheckPassed();
       },
-      fireImmediately: true,
     );
+  }
+
+  /// The first pass starts the stability window: two rechecks ten and twenty
+  /// seconds later must both still see a proxied exit before the run is
+  /// announced as connected.
+  void _onCheckPassed() {
+    if (_stabilizing || _connectionNotified) {
+      return;
+    }
+    _stabilizing = true;
+    _stableCheck10 = Timer(const Duration(seconds: 10), () async {
+      if (!_stabilizing) {
+        return;
+      }
+      final passed = await _recheckOutbound();
+      if (!passed) {
+        _cancelStability();
+      }
+    });
+    _stableCheck20 = Timer(const Duration(seconds: 20), () async {
+      if (!_stabilizing) {
+        return;
+      }
+      final passed = await _recheckOutbound();
+      if (!passed) {
+        _cancelStability();
+        return;
+      }
+      _connectionNotified = true;
+      _cancelStability();
+      unawaited(
+        AppNotification.show(
+          title: '节点连接成功',
+          body: _currentNodeName(),
+        ),
+      );
+    });
+  }
+
+  Future<bool> _recheckOutbound() async {
+    if (!ref.read(isStartProvider)) {
+      return false;
+    }
+    final notifier = ref.read(outboundIpProbeProvider.notifier);
+    notifier.refresh(const [routedOutbound]);
+    final deadline = DateTime.now().add(const Duration(seconds: 6));
+    while (DateTime.now().isBefore(deadline)) {
+      if (!ref.read(isStartProvider)) {
+        return false;
+      }
+      final entry = ref.read(
+        outboundIpProbeProvider,
+      ).entryOf(routedOutbound);
+      if (entry.phase == ProbePhase.failed) {
+        return false;
+      }
+      if (entry.value != null && entry.stamp?.proxied == true) {
+        return true;
+      }
+      await Future<void>.delayed(const Duration(milliseconds: 200));
+    }
+    return false;
+  }
+
+  void _cancelStability() {
+    _stabilizing = false;
+    _stableCheck10?.cancel();
+    _stableCheck10 = null;
+    _stableCheck20?.cancel();
+    _stableCheck20 = null;
   }
 
   String _currentNodeName() {
@@ -110,6 +181,7 @@ class _AppStateManagerState extends ConsumerState<AppStateManager>
 
   @override
   void dispose() {
+    _cancelStability();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
