@@ -232,6 +232,26 @@ class Preferences {
     await sharedPreferencesIns?.setBool(subscriptionAutoUpdateKey, enabled);
   }
 
+  Future<int> getDetectionRetryIntervalSeconds() async {
+    final sharedPreferencesIns = await _store.value;
+    return sharedPreferencesIns?.getInt(detectionRetryIntervalKey) ?? 3;
+  }
+
+  Future<void> saveDetectionRetryIntervalSeconds(int seconds) async {
+    final sharedPreferencesIns = await _store.value;
+    await sharedPreferencesIns?.setInt(detectionRetryIntervalKey, seconds);
+  }
+
+  Future<int> getDetectionRetryMaxCount() async {
+    final sharedPreferencesIns = await _store.value;
+    return sharedPreferencesIns?.getInt(detectionRetryMaxCountKey) ?? 10;
+  }
+
+  Future<void> saveDetectionRetryMaxCount(int count) async {
+    final sharedPreferencesIns = await _store.value;
+    await sharedPreferencesIns?.setInt(detectionRetryMaxCountKey, count);
+  }
+
   Future<void> clearPreferences() async {
     final sharedPreferencesIns = await _store.value;
     await sharedPreferencesIns?.clear();

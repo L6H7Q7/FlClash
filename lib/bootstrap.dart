@@ -164,6 +164,7 @@ class Bootstrap {
     await _handleFailedPreference();
     await RegionPreferenceStore.load();
     await SubscriptionAutoUpdateStore.load();
+    await DetectionRetryStore.load();
     await _showCrashRecoveryTip();
     await _container.read(coreActionProvider.notifier).startCore();
     if (!_bootDecision.isDegraded) {

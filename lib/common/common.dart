@@ -11,6 +11,7 @@ export 'constant.dart';
 export 'context.dart';
 export 'converter.dart';
 export 'datetime.dart';
+export 'detection_retry_store.dart';
 export 'dialog.dart';
 export 'exception.dart';
 export 'file.dart';

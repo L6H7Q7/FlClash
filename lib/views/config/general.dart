@@ -339,6 +339,8 @@ class GeneralView extends ConsumerWidget {
       ),
       const _RegionPreferenceToggle(),
       const _SubscriptionAutoUpdateToggle(),
+      const _DetectionRetryIntervalItem(),
+      const _DetectionRetryMaxItem(),
     ];
   }
 
@@ -468,6 +470,44 @@ class _SubscriptionAutoUpdateToggle extends StatelessWidget {
         subtitle: const Text('打开应用时刷新当前订阅并重新预选节点'),
         value: enabled,
         onChanged: (value) => SubscriptionAutoUpdateStore.setEnabled(value),
+      ),
+    );
+  }
+}
+
+/// Retry interval of a failed outbound check.
+class _DetectionRetryIntervalItem extends StatelessWidget {
+  const _DetectionRetryIntervalItem();
+
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder<int>(
+      valueListenable: DetectionRetryStore.intervalSeconds,
+      builder: (context, value, _) => ListItem<int>.options(
+        title: const Text('检测重试间隔'),
+        options: const [1, 2, 3, 5, 10],
+        onChanged: (seconds) => DetectionRetryStore.setIntervalSeconds(seconds),
+        textBuilder: (seconds) => '$seconds 秒',
+        value: value,
+      ),
+    );
+  }
+}
+
+/// Retry count of a failed outbound check.
+class _DetectionRetryMaxItem extends StatelessWidget {
+  const _DetectionRetryMaxItem();
+
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder<int>(
+      valueListenable: DetectionRetryStore.maxCount,
+      builder: (context, value, _) => ListItem<int>.options(
+        title: const Text('检测重试次数'),
+        options: const [3, 5, 8, 10, 20],
+        onChanged: (count) => DetectionRetryStore.setMaxCount(count),
+        textBuilder: (count) => '$count 次',
+        value: value,
       ),
     );
   }

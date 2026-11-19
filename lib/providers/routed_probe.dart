@@ -375,17 +375,20 @@ mixin RoutedProbe<K, V>
       return;
     }
     final attempt = _retryCount[target] ?? 0;
-    if (attempt >= 8) {
+    if (attempt >= DetectionRetryStore.maxCount.value) {
       return;
     }
     _retryCount[target] = attempt + 1;
-    _retries[target] = Timer(const Duration(milliseconds: 1500), () {
-      _retries.remove(target);
-      _cooling.remove(target)?.cancel();
-      if (ref.mounted && _watchers.containsKey(target)) {
-        _mark(target);
-      }
-    });
+    _retries[target] = Timer(
+      Duration(seconds: DetectionRetryStore.intervalSeconds.value),
+      () {
+        _retries.remove(target);
+        _cooling.remove(target)?.cancel();
+        if (ref.mounted && _watchers.containsKey(target)) {
+          _mark(target);
+        }
+      },
+    );
   }
 
   ProbeEntry<V> _settledEntry(V? value, RouteStamp stamp) {
